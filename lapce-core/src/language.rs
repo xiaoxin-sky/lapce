@@ -192,6 +192,8 @@ pub enum LapceLanguage {
     Svelte,
     #[cfg(feature = "lang-latex")]
     Latex,
+    #[cfg(feature = "lang-vue")]
+    Vue,
 }
 
 // NOTE: Elements in the array must be in the same order as the enum variants of
@@ -714,6 +716,18 @@ const LANGUAGES: &[SyntaxProperties] = &[
         sticky_headers: &[],
         extensions: &["tex"],
     },
+    #[cfg(feature = "lang-vue")]
+    SyntaxProperties {
+        id: LapceLanguage::Vue,
+        language: tree_sitter_vue::language,
+        highlight: tree_sitter_vue::HIGHLIGHTS_QUERY,
+        injection: Some(tree_sitter_vue::INJECTIONS_QUERY),
+        comment: "//",
+        indent: "  ",
+        code_lens: (DEFAULT_CODE_LENS_LIST, DEFAULT_CODE_LENS_IGNORE_LIST),
+        sticky_headers: &[],
+        extensions: &["vue"],
+    },
 ];
 
 impl LapceLanguage {
@@ -1042,5 +1056,9 @@ mod test {
     #[cfg(feature = "lang-latex")]
     fn test_latex_lang() {
         assert_language(LapceLanguage::Latex, &["tex"]);
+    }
+    #[cfg(feature = "lang-vue")]
+    fn test_vue_lang() {
+        assert_language(LapceLanguage::Vue, &["vue"]);
     }
 }

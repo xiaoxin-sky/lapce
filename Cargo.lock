@@ -2564,6 +2564,7 @@ dependencies = [
  "tree-sitter-swift",
  "tree-sitter-toml",
  "tree-sitter-typescript",
+ "tree-sitter-vue",
  "tree-sitter-wgsl",
  "tree-sitter-yaml",
  "tree-sitter-zig",
@@ -5228,6 +5229,16 @@ name = "tree-sitter-typescript"
 version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e8ed0ecb931cdff13c6a13f45ccd615156e2779d9ffb0395864e05505e6e86d"
+dependencies = [
+ "cc",
+ "tree-sitter",
+]
+
+[[package]]
+name = "tree-sitter-vue"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db0ef7ba576066843881cc23d70a89c664e400ad040c972fb1de6847b69c4a12"
 dependencies = [
  "cc",
  "tree-sitter",

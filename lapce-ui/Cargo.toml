@@ -45,7 +45,11 @@ toml_edit = { version = "0.14.4", features = ["easy"] }
 open = { version = "3.0.2", features = [] }
 
 # lapce deps
-druid = { git = "https://github.com/lapce/druid", branch = "shell_opengl", features = [ "svg", "im", "serde", ] }
+druid = { git = "https://github.com/lapce/druid", branch = "shell_opengl", features = [
+    "svg",
+    "im",
+    "serde",
+] }
 # druid = { path = "../../druid/druid", features = ["svg", "im" , "serde"] }
 structdesc = { git = "https://github.com/lapce/structdesc" }
 lapce-core = { path = "../lapce-core" }
@@ -100,20 +104,21 @@ all-languages = [
     "lang-dart",
     "lang-svelte",
     "lang-latex",
+    "lang-vue",
 ]
 
 lang-rust = ["lapce-core/lang-rust"]
 lang-go = ["lapce-core/lang-go"]
-lang-javascript= ["lapce-core/lang-javascript"]
+lang-javascript = ["lapce-core/lang-javascript"]
 lang-typescript = ["lapce-core/lang-typescript"]
 lang-python = ["lapce-core/lang-python"]
 lang-toml = ["lapce-core/lang-toml"]
 lang-elixir = ["lapce-core/lang-elixir"]
 lang-php = ["lapce-core/lang-php"]
-lang-ruby= ["lapce-core/lang-ruby"]
+lang-ruby = ["lapce-core/lang-ruby"]
 lang-c = ["lapce-core/lang-c"]
 lang-cpp = ["lapce-core/lang-cpp"]
-lang-json= ["lapce-core/lang-json"]
+lang-json = ["lapce-core/lang-json"]
 lang-markdown = ["lapce-core/lang-markdown"]
 lang-html = ["lapce-core/lang-html"]
 lang-java = ["lapce-core/lang-java"]
@@ -139,3 +144,4 @@ lang-nix = ["lapce-core/lang-nix"]
 lang-dart = ["lapce-core/lang-dart"]
 lang-svelte = ["lapce-core/lang-svelte"]
 lang-latex = ["lapce-core/lang-latex"]
+lang-vue = ["lapce-core/lang-vue"]
