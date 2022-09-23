@@ -520,6 +520,7 @@ pub enum LapceUICommand {
     ResolveCompletion(BufferId, u64, usize, Box<CompletionItem>),
     UpdateCompletion(usize, String, CompletionResponse, PluginId),
     UpdateHover(usize, Arc<Vec<RichText>>),
+    UpdateVoltReadme(RichText),
     UpdateInlayHints {
         path: PathBuf,
         rev: u64,
@@ -627,6 +628,7 @@ pub enum LapceUICommand {
     WorkspaceFileChange,
     ProxyUpdateStatus(ProxyStatus),
     CloseTerminal(TermId),
+    OpenPluginInfo(VoltInfo),
     SplitTerminal(bool, WidgetId),
     SplitTerminalClose(TermId, WidgetId),
     SplitEditor(bool, WidgetId),
@@ -711,6 +713,8 @@ pub enum LapceUICommand {
         apply_naming: bool,
     },
     FileExplorerRefresh,
+    CopyPath(PathBuf),
+    CopyRelativePath(PathBuf),
     SetLanguage(String),
 
     /// An item in a list was chosen  
