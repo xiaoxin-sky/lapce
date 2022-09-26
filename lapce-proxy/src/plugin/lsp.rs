@@ -433,12 +433,11 @@ impl LspClient {
         server: &str,
         args: &[String],
     ) -> Result<Child> {
-        let mut process = Command::new(server);
+        let mut process = Command::new("node");
         if let Some(workspace) = workspace {
             process.current_dir(&workspace);
         }
-
-        process.args(args);
+        process.args(["--inspect=6009"]).args(args);
 
         #[cfg(target_os = "windows")]
         let process = process.creation_flags(0x08000000);
