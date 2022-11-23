@@ -759,6 +759,14 @@ impl LapceEditorBufferData {
             completion.cancel();
             return;
         }
+        match completion.status {
+            CompletionStatus::Inactive => {
+                println!("未激活");
+            }
+            CompletionStatus::Started => {
+                println!("已经激活,命中缓存{}", completion.input_items.contains_key(&input));
+            }
+        }
 
         if completion.status != CompletionStatus::Inactive
             && completion.offset == start_offset
