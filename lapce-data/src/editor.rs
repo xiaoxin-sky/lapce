@@ -798,13 +798,15 @@ impl LapceEditorBufferData {
         completion.input_items.clear();
         completion.request_id += 1;
         let start_pos = self.doc.buffer().offset_to_position(start_offset);
-        completion.request(
-            self.proxy.clone(),
-            completion.request_id,
-            self.doc.content().path().unwrap().into(),
-            "".to_string(),
-            start_pos,
-        );
+        if char == "." || char == ":" {
+            completion.request(
+                self.proxy.clone(),
+                completion.request_id,
+                self.doc.content().path().unwrap().into(),
+                "".to_string(),
+                start_pos,
+            );
+        }
 
         if !input.is_empty() {
             let position = self.doc.buffer().offset_to_position(offset);
