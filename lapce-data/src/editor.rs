@@ -797,27 +797,19 @@ impl LapceEditorBufferData {
         completion.status = CompletionStatus::Started;
         completion.input_items.clear();
         completion.request_id += 1;
-        let start_pos = self.doc.buffer().offset_to_position(start_offset);
-        if char == "." || char == ":" {
-            completion.request(
-                self.proxy.clone(),
-                completion.request_id,
-                self.doc.content().path().unwrap().into(),
-                "".to_string(),
-                start_pos,
-            );
-        }
+        let position = if input.is_empty() {
+            self.doc.buffer().offset_to_position(start_offset)
+        } else {
+            self.doc.buffer().offset_to_position(offset)
+        };
 
-        if !input.is_empty() {
-            let position = self.doc.buffer().offset_to_position(offset);
-            completion.request(
-                self.proxy.clone(),
-                completion.request_id,
-                self.doc.content().path().unwrap().into(),
-                input,
-                position,
-            );
-        }
+        completion.request(
+            self.proxy.clone(),
+            completion.request_id,
+            self.doc.content().path().unwrap().into(),
+            input,
+            position,
+        );
     }
 
     fn update_signature(&mut self) {
