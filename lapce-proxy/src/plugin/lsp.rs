@@ -6,7 +6,8 @@ use std::{
     path::{Path, PathBuf},
     process::{self, Child, Command, Stdio},
     sync::Arc,
-    thread, time::SystemTime,
+    thread,
+    time::SystemTime,
 };
 
 use anyhow::{anyhow, Result};
@@ -239,6 +240,7 @@ impl LspClient {
         thread::spawn(move || {
             for msg in io_rx {
                 if let Ok(msg) = serde_json::to_string(&msg) {
+                    // log::info!("🦁{}", msg);
                     let msg =
                         format!("Content-Length: {}\r\n\r\n{}", msg.len(), msg);
                     let _ = writer.write(msg.as_bytes());
@@ -254,6 +256,7 @@ impl LspClient {
             loop {
                 match read_message(&mut reader) {
                     Ok(message_str) => {
+                        // log::info!("🚀{}", message_str);
                         match JsonRpc::parse(&message_str) {
                             Ok(res) => {
                                 if let Some(id) = res.get_id() {

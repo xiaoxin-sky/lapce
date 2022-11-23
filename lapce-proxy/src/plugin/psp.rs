@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    fs,
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicU64, Ordering},
@@ -160,7 +161,7 @@ pub struct PluginServerRpcHandler {
     rpc_tx: Sender<PluginServerRpc>,
     rpc_rx: Receiver<PluginServerRpc>,
     io_tx: Sender<JsonRpc>,
-    time_tx:Sender<TimeRequest>,
+    time_tx: Sender<TimeRequest>,
     id: Arc<AtomicU64>,
     server_pending: Arc<Mutex<HashMap<Id, ResponseHandler<Value, RpcError>>>>,
 }
@@ -221,7 +222,11 @@ pub struct TimeRequest {
 }
 
 impl PluginServerRpcHandler {
-    pub fn new(volt_id: String, io_tx: Sender<JsonRpc>, time_tx: Sender<TimeRequest>) -> Self {
+    pub fn new(
+        volt_id: String,
+        io_tx: Sender<JsonRpc>,
+        time_tx: Sender<TimeRequest>,
+    ) -> Self {
         let (rpc_tx, rpc_rx) = crossbeam_channel::unbounded();
 
         let rpc = Self {
@@ -252,7 +257,11 @@ impl PluginServerRpcHandler {
         params: Params,
         rh: ResponseHandler<Value, RpcError>,
     ) {
-        self.time_tx.send(TimeRequest { id: id.clone(), start: SystemTime::now(), method: String::from(method) });
+        self.time_tx.send(TimeRequest {
+            id: id.clone(),
+            start: SystemTime::now(),
+            method: String::from(method),
+        });
         {
             let mut pending = self.server_pending.lock();
             pending.insert(id.clone(), rh);
@@ -556,6 +565,7 @@ pub struct PluginHostHandler {
     pub server_rpc: PluginServerRpcHandler,
     pub server_capabilities: ServerCapabilities,
     server_registrations: ServerRegistrations,
+    cancellationPipeUpdateKey: Option<String>,
 }
 
 impl PluginHostHandler {
@@ -582,6 +592,7 @@ impl PluginHostHandler {
             server_rpc,
             server_capabilities: ServerCapabilities::default(),
             server_registrations: ServerRegistrations::default(),
+            cancellationPipeUpdateKey: None,
         }
     }
 
@@ -945,6 +956,8 @@ impl PluginHostHandler {
             )>,
         >,
     ) {
+        let doc_uri = document.uri.clone();
+        let doc_version = document.version.clone();
         let kind = match &self.server_capabilities.text_document_sync {
             Some(TextDocumentSyncCapability::Kind(kind)) => *kind,
             Some(TextDocumentSyncCapability::Options(options)) => {
@@ -1000,6 +1013,17 @@ impl PluginHostHandler {
             path,
             false,
         );
+
+        // const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
+
+        let newKey = Some(format!("{}|{}", doc_uri.as_str(), doc_version));
+        if self.cancellationPipeUpdateKey != newKey {
+            self.cancellationPipeUpdateKey = newKey;
+            fs::write(
+                Path::new("/Users/skymac/tmpFile_lapce-cancellation-pipe.tmp"),
+                format!("{:?}", SystemTime::now()),
+            );
+        }
     }
 
     pub fn format_semantic_tokens(
