@@ -394,7 +394,8 @@ pub fn start_volt(
     let mut store = wasmtime::Store::new(&engine, wasi);
 
     let (io_tx, io_rx) = crossbeam_channel::unbounded();
-    let rpc = PluginServerRpcHandler::new(meta.name.clone(), io_tx);
+    let (time_tx, time_rx) = crossbeam_channel::unbounded();
+    let rpc = PluginServerRpcHandler::new(meta.name.clone(), io_tx,time_tx);
 
     let local_rpc = rpc.clone();
     let local_stdin = stdin.clone();
