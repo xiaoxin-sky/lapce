@@ -5,7 +5,7 @@ use std::{
         atomic::{AtomicU64, Ordering},
         Arc,
     },
-    thread,
+    thread, time::SystemTime,
 };
 
 use anyhow::{anyhow, Result};
@@ -159,6 +159,7 @@ pub struct PluginServerRpcHandler {
     rpc_tx: Sender<PluginServerRpc>,
     rpc_rx: Receiver<PluginServerRpc>,
     io_tx: Sender<JsonRpc>,
+    time_tx: Sender<TimeRequest>,
     id: Arc<AtomicU64>,
     server_pending: Arc<Mutex<HashMap<Id, ResponseHandler<Value, RpcError>>>>,
 }
@@ -211,8 +212,16 @@ pub trait PluginServerHandler {
     );
 }
 
+#[derive(Clone)]
+pub struct TimeRequest {
+    pub id: Id,
+    pub start: SystemTime,
+    pub method: String,
+}
+
+
 impl PluginServerRpcHandler {
-    pub fn new(volt_id: String, io_tx: Sender<JsonRpc>) -> Self {
+    pub fn new(volt_id: String, io_tx: Sender<JsonRpc>,time_tx: Sender<TimeRequest>,) -> Self {
         let (rpc_tx, rpc_rx) = crossbeam_channel::unbounded();
 
         let rpc = Self {
@@ -220,6 +229,7 @@ impl PluginServerRpcHandler {
             plugin_id: PluginId::next(),
             rpc_tx,
             rpc_rx,
+            time_tx,
             io_tx,
             id: Arc::new(AtomicU64::new(0)),
             server_pending: Arc::new(Mutex::new(HashMap::new())),
@@ -242,6 +252,11 @@ impl PluginServerRpcHandler {
         params: Params,
         rh: ResponseHandler<Value, RpcError>,
     ) {
+        self.time_tx.send(TimeRequest {
+            id: id.clone(),
+            start: SystemTime::now(),
+            method: String::from(method),
+        });
         {
             let mut pending = self.server_pending.lock();
             pending.insert(id.clone(), rh);

@@ -5,12 +5,12 @@ use std::{
     path::{Path, PathBuf},
     process::{self, Child, Command, Stdio},
     sync::Arc,
-    thread,
+    thread, time::SystemTime, collections::HashMap,
 };
 
 use anyhow::{anyhow, Result};
 use crossbeam_channel::Sender;
-use jsonrpc_lite::{Id, Params};
+use jsonrpc_lite::{Id, Params, JsonRpc};
 use lapce_rpc::{style::LineStyle, RpcError};
 use lapce_xi_rope::Rope;
 use lsp_types::{
@@ -23,7 +23,7 @@ use serde_json::{json, Value};
 
 use super::psp::{
     handle_plugin_server_message, PluginHandlerNotification, PluginHostHandler,
-    PluginServerHandler, PluginServerRpcHandler, RpcCallback,
+    PluginServerHandler, PluginServerRpcHandler, RpcCallback, TimeRequest,
 };
 use crate::{buffer::Buffer, plugin::PluginCatalogRpcHandler};
 
@@ -184,7 +184,52 @@ impl LspClient {
 
         let mut writer = Box::new(BufWriter::new(stdin));
         let (io_tx, io_rx) = crossbeam_channel::unbounded();
-        let server_rpc = PluginServerRpcHandler::new(volt_id.clone(), io_tx.clone());
+        let (time_tx, time_rx) = crossbeam_channel::unbounded();
+        let server_rpc =
+            PluginServerRpcHandler::new(volt_id.clone(), io_tx.clone(), time_tx);
+        let (timeA_tx, timeA_rx) = crossbeam_channel::unbounded();
+        let response_timeA_tx = timeA_tx.clone();
+        // 接收写入
+        thread::spawn(move || loop {
+            match time_rx.recv() {
+                Ok(st) => {
+                    timeA_tx.send(st);
+                }
+                Err(_) => println!("接受出错"),
+            };
+        });
+        // 接收 lsp 响应和处理
+        thread::spawn(move || {
+            let mut id_map: HashMap<jsonrpc_lite::Id, TimeRequest> = HashMap::new();
+            loop {
+                match timeA_rx.recv() {
+                    Ok(st) => {
+                        if let Some(data) = id_map.get(&st.id) {
+                            let difference = st
+                                .start
+                                .duration_since(data.start)
+                                .expect("Clock may have gone backwards"); //expect()方法在Ok时返回T值，在Err时panic
+                            log::info!(
+                                "id:{:?}--method:{}--spend_time:{:?}",
+                                st.id,
+                                data.method,
+                                difference
+                            );
+                        } else {
+                            id_map.insert(
+                                st.id.clone(),
+                                TimeRequest {
+                                    id: st.id.clone(),
+                                    start: SystemTime::now(),
+                                    method: st.method,
+                                },
+                            );
+                        };
+                    }
+                    Err(_) => println!("接受出错1"),
+                };
+            }
+        });
         thread::spawn(move || {
             for msg in io_rx {
                 if let Ok(msg) = serde_json::to_string(&msg) {
@@ -203,6 +248,20 @@ impl LspClient {
             loop {
                 match read_message(&mut reader) {
                     Ok(message_str) => {
+                        match JsonRpc::parse(&message_str) {
+                            Ok(res) => {
+                                if let Some(id) = res.get_id() {
+                                    response_timeA_tx
+                                        .send(TimeRequest {
+                                            id,
+                                            start: std::time::SystemTime::now(),
+                                            method: String::from(""),
+                                        })
+                                        .unwrap();
+                                }
+                            }
+                            Err(_) => todo!(),
+                        }
                         if let Some(resp) = handle_plugin_server_message(
                             &local_server_rpc,
                             &message_str,

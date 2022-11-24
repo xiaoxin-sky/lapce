@@ -748,6 +748,9 @@ impl PluginCatalogRpcHandler {
         input: String,
         position: Position,
     ) {
+        // if input.is_empty() {
+        //     return;
+        // }
         let uri = Url::from_file_path(path).unwrap();
         let method = Completion::METHOD;
         let params = CompletionParams {
